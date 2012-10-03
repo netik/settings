@@ -1,0 +1,322 @@
+# jna's .bash profile
+
+echo -n "(.profile"
+
+# ---------------- Environment ----------------
+# for EC2
+EDITOR=emacs
+
+export EDITOR=emacs   # edit to taste
+export EDITOR=vi
+
+PATH=/opt/local/bin:/opt/local/sbin:/Users/jna/.gem/ruby/1.8/bin:~/bin:/Users/jna/seco/tools/bin:/Users/jna/src/ec2-api-tools-1.3-53907/bin:/bin:/sbin:/twitter/httpd/bin:/usr/X11/bin:/usr/bin:/usr/local/bin:/usr/local/mysql/bin:/usr/sbin:/Applications/sshfs/bin:/System/Library/Frameworks/Ruby.framework/Versions/1.8/usr/bin
+export PATH
+
+if [ "`/bin/hostname`" == "John-Adams-MacBook-Pro.local" ]; then
+    # this stuff only applies to my local dev environment (laptop)
+
+    export EC2_CERT=~/.ec2/cert-W45LMZKFDOXECYVVUPW76VCI7ZARAM3S.pem
+    export EC2_HOME=/Users/jna/src/ec2-api-tools-1.3-53907
+    export EC2_PRIVATE_KEY=~/.ec2/pk-W45LMZKFDOXECYVVUPW76VCI7ZARAM3S.pem
+    
+    export RAILS_ENV='development'
+    export RAILS_ENV='development'
+    export RATPROXY="/Users/jna/security/proxies/ratproxy/ratproxy"
+    export RUBY_GC_MALLOC_LIMIT=50000000
+    export RUBY_HEAP_MIN_SLOTS=250000
+    export RUBY_HEAP_SLOTS_GROWTH_FACTOR=1
+    export RUBY_HEAP_SLOTS_INCREMENT=250000
+    export PYTHONPATH=$PYTHONPATH:/Library/Python/2.5/site-packages/:~/lib/python
+
+    function deploysh() { echo "cd twitter; cap production shell"; ssh -tt -l jna nest1.twitter.com sudo su - twitter; } 
+
+fi
+
+# ---------------- Functions ------------------
+
+# cmyru
+function cymru() { 
+    whois -h whois.cymru.com " -v $1 "
+}
+
+# MacOS Seq Emulation
+function seq() { 
+  cnt=$1
+  while [ $cnt -ne $(( $2 +1 )) ]; do 
+    echo $cnt
+    cnt=$(( $cnt + 1 ))
+  done
+}
+
+function find_java() {
+    if [ ! -z "$JAVA_HOME" ]; then
+        return
+    fi
+
+    potential=$(ls -r1d /opt/jdk /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home /usr/java/j* /usr/java/default 2>/dev/null)
+    for p in $potential; do
+        if [ -x $p/bin/java ]; then
+            JAVA_HOME=$p
+            break
+        fi
+    done
+
+    export JAVA_HOME
+}
+
+find_java
+
+function git-refresh() {
+  (
+    cd ~/twitter/twitter
+
+    current_branch=`git branch | grep '*' | sed 's/* //g'`
+    if [[ "xx" != "x${current_branch}x" ]];then
+      git checkout master
+      git pull
+      git checkout ${current_branch}
+      git merge master
+    fi
+  )
+}
+
+function wget() { /opt/local/bin/curl -O $*; } 
+function la() { /bin/ls -Fa $*; }
+function ls() { /bin/ls -F $*; }
+function lsl() { l -l $*; }
+function lsla() { la -lg $*; }
+function l.() { /bin/ls .[A-Za-z]* $*; }
+function j() { jobs -l; }
+function dg() { ssh -l decay khurla.pair.com; }
+function rehash() { builtin hash -r; }
+function rlogin() { /usr/ucb/rlogin $*; }
+
+# ---- aliases ----
+alias start_mysql='sudo /usr/local/mysql/bin/mysqld_safe &'
+alias stop_mysql='mysqladmin shutdown -uroot -p'
+alias scpresume="rsync --partial --progress --rsh=ssh"
+alias ratproxy="$RATPROXY -v ~/security/scans -w ~/security/scans/twitter.out -d twitter.com -lfjxscm "
+alias ratproxyXSS="$RATPROXY -v ~/security/scans -w ~/security/scans/twitter.out -d twitter.com -lejxfscm -XC"
+alias ratproxyv="$RATPROXY -v ~/security/scans -w ~/security/scans/twitter.out -d twitter.com -lexjtifscgjm"
+alias ratproxyvXSS="$RATPROXY -v ~/security/scans -w ~/security/scans/twitter.out -d twitter.com -lextjifscgjm -XC"
+alias ratreport="( cd /Users/jna/security/proxies/ratproxy; ./ratproxy-report.sh ~/security/scans/twitter.out > ./twitter-report.html; open ./twitter-report.html )"
+alias HEAD="curl -I $*"
+
+# host shortcuts
+alias sshsmf='ssh nest1.smf1.twitter.com $*'
+alias nest1='ssh nest1.smf1.twitter.com $*'
+alias webbox='ssh smf1-ada-27-sr4.prod.twitter.com $*'
+alias dirtybird='ssh smf1-adx-35-sr1.prod.twitter.com $*'
+alias toolsbox='ssh smf1-adx-35-sr1.prod.twitter.com $*'
+
+# intercept stdio/stdout
+alias intercept="strace -ff -e trace=write -e write=1,2 -p $*"
+
+# 
+#alias 'sshec2'='ssh -i ~/.ec2/id_rsa-gsg-keypair root@smokeping.twitter.com'
+alias 'sshec2'='ssh -i ~/.ec2/id_rsa-gsg-keypair root@184.72.175.124'
+
+function _macosx() 
+{ 
+    if [ $(uname -s) = Darwin ]; then 
+        return 0 
+    else 
+        return 1 
+    fi 
+} 
+
+# ----- java ----- 
+JDKS_ROOT= 
+if [ $(uname -s) = Darwin ]; then 
+    JDKS_ROOT=/System/Library/Frameworks/JavaVM.framework/Versions 
+fi 
+SOYLATTE_HOME=${HOME}/dev/java/src/soylatte/control/build/bsd-amd64 
+SOYLATTE_32_HOME=/usr/local/soylatte16-i386-1.0.3 
+JAVA_1_7_0_HOME=/usr/local/java-1.7.0 
+ 
+pickjdk() 
+{ 
+    if [ -z "$JDKS_ROOT" ]; then 
+        return 1 
+    fi 
+ 
+    declare -a JDKS 
+    local n=1 jdk total_jdks choice=0 currjdk=$JAVA_HOME explicit_jdk 
+    for jdk in $JDKS_ROOT/[0-9]*; do 
+        if [ -d $jdk -a ! -L $jdk ]; then 
+            echo -n " $n) $(basename $jdk)" 
+            if _macosx; then 
+                jdk=$jdk/Home 
+            fi 
+            if [ $jdk = "$currjdk" ]; then 
+                echo " < CURRENT" 
+            else 
+                echo 
+            fi 
+            JDKS[$n]=$jdk 
+            total_jdks=$n 
+            n=$[ $n + 1 ] 
+        fi 
+    done 
+    echo " $n) Soylatte-amd64" 
+    JDKS[$n]=$SOYLATTE_HOME 
+    n=$[ $n + 1 ] 
+    echo " $n) Soylatte16-i386-1.0.3" 
+    JDKS[$n]=$SOYLATTE_32_HOME 
+    n=$[ $n + 1 ] 
+    echo " $n) 1.7.0" 
+    JDKS[$n]=$JAVA_1_7_0_HOME 
+    n=$[ $n + 1 ] 
+    echo " $n) None" 
+    JDKS[$n]=None 
+    total_jdks=$n 
+ 
+    if [ $total_jdks -gt 1 ]; then 
+        while [ -z "${JDKS[$choice]}" ]; do 
+            echo -n "Choose one of the above [1-$total_jdks]: " 
+            read choice 
+        done 
+        else 
+        choice=1 
+    fi 
+ 
+    if [ -z "$currjdk" ]; then 
+        currjdk=$(dirname $(dirname $(type -path java))) 
+    fi 
+ 
+    if [ ${JDKS[$choice]} != None ]; then 
+        export JAVA_HOME=${JDKS[$choice]} 
+    else 
+        unset JAVA_HOME 
+    fi 
+ 
+    explicit_jdk= 
+    for jdk in ${JDKS[*]}; do 
+        if [ "$currjdk" = "$jdk" ]; then 
+            explicit_jdk=$jdk 
+            break 
+        fi 
+    done 
+ 
+    if [ "$explicit_jdk" ]; then 
+        if [ -z "$JAVA_HOME" ]; then 
+            PATH=$(echo $PATH | sed "s|$explicit_jdk/bin:*||g") 
+        else 
+            PATH=$(echo $PATH | sed "s|$explicit_jdk|$JAVA_HOME|g") 
+        fi 
+    elif [ "$JAVA_HOME" ]; then 
+        PATH="$JAVA_HOME/bin:$PATH" 
+    fi 
+ 
+    hash -r 
+    unset JDKS 
+} 
+
+
+
+function rf() {
+  environments=${*:-"test selenium development"}
+  echo "Restarting memcache"
+  killall memcached
+  memcached -d
+  rake kestrel:stop
+  rake kestrel:start
+  foreach_env " Dropping Database" "$environments" "dropdb"
+  foreach_env " Creating Database" "$environments" "createdb"
+  foreach_env "Migrating Database" "$environments" "migratedb"
+  foreach_env "  Loading Fixtures" "development" "loadfixtures"
+}
+
+function foreach_env() {
+  msg=$1
+  environments=$2
+  command=$3
+  echo -n "$msg: "
+  for env in $environments; do
+    echo -n "$env "
+    $command $env
+  done
+  echo
+}
+
+function dropdb() {
+  env=$1
+  mysql --user=root -e "DROP DATABASE twttr_$env;" >/dev/null
+}
+
+function createdb() {
+  env=$1
+  mysql --user=root -e "CREATE DATABASE twttr_$env;" >/dev/null
+}
+
+function migratedb() {
+  env=$1
+  RAILS_ENV=$env rake db:migrate >/dev/null
+}
+
+function loadfixtures() {
+  env=$1
+  RAILS_ENV=$env rake db:fixtures:load >/dev/null
+}
+
+# for google
+alias whatsmyip='curl http://www.whatismyip.com/automation/n09230945.asp;echo '
+
+function cctunnel {
+    ssh -X -L4444:web034:4444 -L1098:web034:1098 -L1099:web034:1099 -l $USER nest1.twitter.com
+}
+
+function u002 {
+     ssh -D8000 -l jna nest1.twitter.com 
+}
+
+function c066 {
+    ssh -D8000 -l jna c066.twitter.com 
+}
+
+function leap {
+    ssh -t -l jna nest1.twitter.com ssh -l jna -p22475 $*
+}
+
+function sshto {
+    ssh -t -l $USER nest1.twitter.com ssh -l $USER -p22475 $*
+}
+
+function kq() {
+  queue=$1
+  servers="kestrel001 kestrel002 daemon045 daemon046"
+  while true; do
+    echo -n "$(date) -- $queue: "
+    (
+      for kestrel in $servers; do
+        (echo "STATS"; sleep 1) | nc $kestrel 22133 | grep queue_${queue}_items | awk '{print $3}' | sed -e 's/\r//'
+      done
+      echo "0"
+
+      for kestrel in $servers; do
+        echo "+"
+      done
+      echo "p"
+    ) | dc
+  done
+}
+# --- end ---
+echo ")"
+
+
+function curl() { 
+  /opt/local/bin/curl -H 'User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.84 Safari/534.13' $*
+}
+
+function curlsf() { 
+  /opt/local/bin/curl -L -H 'User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.84 Safari/534.13' -O $*
+}
+
+source ~/settings/zer0prompt.sh
+zer0prompt
+unset zer0prompt
+
+# for code signing
+export CODESIGN_ALLOCATE=/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate
+
+
