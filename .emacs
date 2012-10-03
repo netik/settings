@@ -6,6 +6,9 @@
 ;; Simple Lisp Files
 (add-to-list 'load-path "~/.site-lisp/el")
 (add-to-list 'load-path "~/.site-lisp/rinari")
+(add-to-list 'load-path "~/settings/site-lisp/el")
+(add-to-list 'load-path "~/settings/site-lisp/rinari")
+
 (require 'pabbrev)
 
 (require 'google-c-style)
