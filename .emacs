@@ -68,3 +68,8 @@
   (buffer-indent)
   (delete-trailing-whitespace))
 (put 'upcase-region 'disabled nil)
+
+;; font-lock-mode
+(if (fboundp 'global-font-lock-mode)
+    (global-font-lock-mode 1)        ; GNU Emacs
+  (setq font-lock-auto-fontify t))   ; XEmacs
