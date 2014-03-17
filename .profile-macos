@@ -116,7 +116,10 @@ alias toolsbox='ssh smf1-adx-35-sr1.prod.twitter.com $*'
 # intercept stdio/stdout
 alias intercept="strace -ff -e trace=write -e write=1,2 -p $*"
 
-# 
+# dir shortcuts
+alias manifests="cd ~/twitter/twitter-ops/puppet/master/manifests/nodes"
+alias modules="cd ~/twitter/twitter-ops/puppet/modules"
+
 #alias 'sshec2'='ssh -i ~/.ec2/id_rsa-gsg-keypair root@smokeping.twitter.com'
 alias 'sshec2'='ssh -i ~/.ec2/id_rsa-gsg-keypair root@184.72.175.124'
 
