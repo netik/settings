@@ -1,3 +1,4 @@
+(global-font-lock-mode 1)
 
 (put 'narrow-to-region 'disabled nil)
 
@@ -6,6 +7,11 @@
 ;; Simple Lisp Files
 (add-to-list 'load-path "~/.site-lisp/el")
 (add-to-list 'load-path "~/.site-lisp/rinari")
+(add-to-list 'load-path "~/settings/site-lisp/el")
+(add-to-list 'load-path "~/settings/site-lisp/rinari")
+(add-to-list 'load-path "~/settings/site-lisp/ruby-mode")
+
+(require 'ruby-mode)
 (require 'pabbrev)
 
 (require 'google-c-style)
@@ -14,23 +20,23 @@
 ;;(require 'ido)
 ;;(ido-mode t)
      
-;; Rinari
-(require 'rinari)
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(gud-gdb-command-name "gdb --annotate=1")
- '(large-file-warning-threshold nil)
- '(safe-local-variable-values (quote ((encoding . binary)))))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
-
+;; Rinari -- only load this if we're on newer emacs
+(when (>= emacs-major-version 22)
+  (require 'rinari)
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(gud-gdb-command-name "gdb --annotate=1")
+   '(large-file-warning-threshold nil)
+   (custom-set-faces
+    ;; custom-set-faces was added by Custom.
+    ;; If you edit it by hand, you could mess it up, so be careful.
+    ;; Your init file should contain only one such instance.
+    ;; If there is more than one, they won't work right.
+    )
+))
 
 ; Code Cleanup for Emacs V1.0
 ;; http://blog.modp.com/2008/11/handy-emacs-functions-for-code-cleanup.html

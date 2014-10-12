@@ -1,0 +1,6 @@
+There isn't much to do here. Most of this junk is specific to my working environment and might
+not be for you. If you find something of value, great! If not, oh well. 
+
+First, clone this repository into your home directory. Remove any existing .bash/.profile/.emacs files.
+Then, run makelinks.sh to link your default dot files to the ones in this repo.
+
